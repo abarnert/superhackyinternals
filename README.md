@@ -9,7 +9,13 @@ change between versions, or even compile-time configuration settings.
 `PyObject` and `PyVarObject` should be safe unless you compiled Python with
 `_PyObject_HEAD_EXTRA` trace debugging, but `PyLongObject` can be wrong if
 you're using 15-bit rather than 30-bit digits, and `PyUnicodeObject`, you'll
-need to change everything to go back to Python 3.2 or 2.7.
+need to completely change everything to go back to Python 3.2 or 2.7 or 
+something.
+
+## Integers
+
+An `int` is basically just an array of 30-bit digits, which is pretty easy
+to understand.
 
 Here's a clever use of looking at the raw digits of an int:
 
@@ -48,3 +54,24 @@ still be 1000, and even in the interactive prompt, it may revert to 1000
 once the last reference goes away. (But look at `sys.getrefcount(1000)`,
 or of course the `ob_refcount` directly, and you may be surprised,
 especially if you're using `IPython`.)
+
+## Strings
+
+A `str` is a lot more complicated. There are four different ways of
+storing them. You may have heard of the clever 1-byte/2-byte/4-byte
+thing, but together they consitute just one of those four ways. Pure ASCII 
+strings (as opposed to only pure Latin-1, meaning there's no need for a 
+UTF-8 cache) use a slightly format. Strings created by legacy C API 
+functions use a whole different way of storing things, plus another whole 
+different one while the creator is still building them and hasn't marked 
+them ready yet.
+
+Of course `ctypes` isn't great at handling things where you may be 
+dealing with either a pointer to or an array of any of four types, some 
+of which `ctypes` considers string types and others not. So be careful
+with things like the `get_buffer` function; they may not return what you
+expected.
+
+Overall, the best use of `PyUnicodeObject` is probably crashing your
+interpreter, but see the included test code for all the fun stuff you can 
+do.
