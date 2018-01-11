@@ -137,8 +137,25 @@ class PyBytesObject(ctypes.Structure):
         ('ob_sval', ctypes.c_uint8 * 1))
     def value(self):
         arr = ctypes.addressof(self.ob_sval)
-        return (ctypes.c_char * abs(self.ob_size + 1)).from_address(arr)
+        return (ctypes.c_char * (self.ob_size + 1)).from_address(arr)
 
+# Finally, no need for a variable struct trick!
+class PyByteArrayObject(ctypes.Structure):
+    _fields_ = (
+        ('ob_refcnt', ctypes.c_ssize_t),
+        ('ob_type', ctypes.c_void_p),
+        ('ob_size', ctypes.c_ssize_t),
+        ('ob_alloc', ctypes.c_ssize_t),
+        ('ob_bytes', ctypes.POINTER(ctypes.c_uint8)),
+        ('ob_start', ctypes.POINTER(ctypes.c_uint8)),
+        ('ob_exports', ctypes.c_int))
+    def value(self):
+        return ctypes.cast(self.ob_start,
+                           ctypes.POINTER(ctypes.c_char * self.ob_size))
+    def buffer(self):
+        return ctypes.cast(self.ob_bytes,
+                           ctypes.POINTER(ctypes.c_char * self.ob_alloc))
+    
 n = 12448057941136394342297748548545082997815840357634948550739612798732309975923280685245876950055614362283769710705811182976142803324242407017104841062064840113262840137625582646683068904149296501029754654149991842951570880471230098259905004533869130509989042199261339990315125973721454059973605358766253998615919997174542922163484086066438120268185904663422979603026066685824578356173882166747093246377302371176167843247359636030248569148734824287739046916641832890744168385253915508446422276378715722482359321205673933317512861336054835392844676749610712462818600179225635467147870208
 m = -n
 z = 0
@@ -258,3 +275,9 @@ assert p.utf8 == u.encode('utf8')
 b = b'abcd'
 p = PyBytesObject.from_address(id(b))
 assert bytes(p.value()) == b + b'\0'
+
+b = bytearray(b'abcd')
+p = PyByteArrayObject.from_address(id(b))
+del b[0]
+assert bytes(p.value().contents) == b'bcd'
+assert bytes(p.buffer().contents) == b'abcd\0'
