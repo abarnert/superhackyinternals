@@ -160,6 +160,7 @@ assert p.length == 4
 assert p.kind == p.PyUnicode_1BYTE_KIND
 assert p.interned == p.SSTATE_INTERNED_MORTAL
 assert p.compact
+assert p.ascii
 assert bytes(get_buffer(a)) == b'abcd'
 
 b = ''.join(('a', 'b', 'c', 'd'))
@@ -168,7 +169,15 @@ assert p.length == 4
 assert p.kind == p.PyUnicode_1BYTE_KIND
 assert p.interned == p.SSTATE_NOT_INTERNED
 assert p.compact
-assert bytes(get_buffer(b)) == b'abcd'    
+assert bytes(get_buffer(b)) == b'abcd'
+
+lat = '\u00e1b\u00e7d' # Latin-1, but not ASCII
+p = PyUnicodeObject.from_address(id(lat))
+assert p.length == 4
+assert p.kind == p.PyUnicode_1BYTE_KIND
+assert p.compact
+assert not p.ascii
+assert bytes(get_buffer(lat)) == lat.encode('latin-1')
 
 u = sys.intern('\u00e1\u03b2\u00e7\u03b4')
 p = PyUnicodeObject.from_address(id(u))
