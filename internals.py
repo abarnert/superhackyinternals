@@ -121,6 +121,24 @@ def get_buffer(s):
         elif p.kind == p.PyUnicode_4BYTE_KIND: return p.data.ucs4
     return (t * length).from_address(addr)
 
+# We use the same trick for the variable-length ob_sval here as
+# for ob_digit above, except that we also have to pun the type as
+# uint8 instead of char, because otherwise self.ob_sval ends up
+# returning a bytes object (of length 1) rather than an array.
+# Also, note that for historical reasons, there's always a null
+# terminator at the end which is not counted in the size. We might
+# as well return that null terminator for fun.
+class PyBytesObject(ctypes.Structure):
+    _fields_ = (
+        ('ob_refcnt', ctypes.c_ssize_t),
+        ('ob_type', ctypes.c_void_p),
+        ('ob_size', ctypes.c_ssize_t),
+        ('ob_shash', ctypes.c_int64), # actually Py_hash_t == intptr_t
+        ('ob_sval', ctypes.c_uint8 * 1))
+    def value(self):
+        arr = ctypes.addressof(self.ob_sval)
+        return (ctypes.c_char * abs(self.ob_size + 1)).from_address(arr)
+
 n = 12448057941136394342297748548545082997815840357634948550739612798732309975923280685245876950055614362283769710705811182976142803324242407017104841062064840113262840137625582646683068904149296501029754654149991842951570880471230098259905004533869130509989042199261339990315125973721454059973605358766253998615919997174542922163484086066438120268185904663422979603026066685824578356173882166747093246377302371176167843247359636030248569148734824287739046916641832890744168385253915508446422276378715722482359321205673933317512861336054835392844676749610712462818600179225635467147870208
 m = -n
 z = 0
@@ -237,3 +255,6 @@ PyUnicode_AsUTF8AndSize(leg, None)
 assert p.utf8_length == 8
 assert p.utf8 == u.encode('utf8')
 
+b = b'abcd'
+p = PyBytesObject.from_address(id(b))
+assert bytes(p.value()) == b + b'\0'
