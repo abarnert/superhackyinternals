@@ -86,9 +86,14 @@ do.
 
 As examples, I think these types cover everything you'd need to figure
 out any other type later ("you" here meaning "me in the future, the next
-time I've forgotten how strings work under the covers...). There's some
-interesting stuff in `dict`, but off the top of my head, all of the other 
-builtin types either aren't very exciting (`list` is just `bytearray` with 
-an array of  `PyObject *` instead of `char`), or do all the exciting stuff 
-at a higher level (functions are fun, but internally there's nothing to see 
-you can't already see from inside the language).
+time I've forgotten how strings work under the covers...).
+
+The only other builtin with interestingly complicated internals I can
+think of is `dict`.
+
+There are some types with key attributes that are immutable from within 
+the language. In many cases, it's easier to just `pythonapi` the C API 
+functions (e.g., with `frame`, `cell`, `function`, `code`, etc.), but 
+there are a few things that are immutable even from the C API (e.g., 
+monkeypatching the slots of a builtin `type`), and you can hack them up
+the same way as `int` and `str`.
