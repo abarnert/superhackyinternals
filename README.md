@@ -57,9 +57,15 @@ especially if you're using `IPython`.)
 
 ## Strings
 
-A `str` is a lot more complicated. There are four different ways of
-storing them. You may have heard of the clever 1-byte/2-byte/4-byte
-thing, but together they consitute just one of those four ways. Pure ASCII 
+Byte strings (`bytes`, `bytearray`) are pretty easy. The former just has
+the bytes embedded in the struct (but with an extra null terminator); the
+latter has a pointer to a buffer, and an extra pointer to within that 
+buffer and an extra length to handle slack on both sides. (To get slack
+on the left, delete some initial elements.)
+
+Unicode strings are a lot more complicated. There are four different ways 
+of storing them. You may have heard of the clever 1-byte/2-byte/4-byte
+thing--but together, they consitute just one of those four ways. Pure ASCII 
 strings (as opposed to only pure Latin-1, meaning there's no need for a 
 UTF-8 cache) use a slightly format. Strings created by legacy C API 
 functions use a whole different way of storing things, plus another whole 
@@ -75,3 +81,14 @@ expected.
 Overall, the best use of `PyUnicodeObject` is probably crashing your
 interpreter, but see the included test code for all the fun stuff you can 
 do.
+
+## Other types
+
+As examples, I think these types cover everything you'd need to figure
+out any other type later ("you" here meaning "me in the future, the next
+time I've forgotten how strings work under the covers...). There's some
+interesting stuff in `dict`, but off the top of my head, all of the other 
+builtin types either aren't very exciting (`list` is just `bytearray` with 
+an array of  `PyObject *` instead of `char`), or do all the exciting stuff 
+at a higher level (functions are fun, but internally there's nothing to see 
+you can't already see from inside the language).
