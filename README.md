@@ -82,6 +82,10 @@ Overall, the best use of `PyUnicodeObject` is probably crashing your
 interpreter, but see the included test code for all the fun stuff you can 
 do.
 
+Also see the `stringy.py` script for a combination of `pythonapi` and
+`internals` code to screw with strings in a way that's simple from the
+C API but normally not doable from inside Python.
+
 ## Other types
 
 As examples, I think these types cover everything you'd need to figure
